@@ -1,14 +1,16 @@
 #!/bin/sh
 
-vocab="../data/vocab_az-en.bin"
-train_src="../data/train.en-az.az.txt"
-train_tgt="../data/train.en-az.en.txt"
-dev_src="../data/dev.en-az.az.txt"
-dev_tgt="../data/dev.en-az.en.txt"
-test_src="../data/test.en-az.az.txt"
-test_tgt="../data/test.en-az.en.txt"
+lang_pair=${@:1}
 
-work_dir="../results/az-en"
+vocab="../data/vocab_$lang_pair.bin"
+train_src="../data/train.$lang_pair.az.txt"
+train_tgt="../data/train.$lang_pair.en.txt"
+dev_src="../data/dev.$lang_pair.az.txt"
+dev_tgt="../data/dev.$lang_pair.en.txt"
+test_src="../data/test.$lang_pair.az.txt"
+test_tgt="../data/test.$lang_pair.en.txt"
+
+work_dir="../results/$lang_pair"
 
 mkdir -p ${work_dir}
 echo save re
@@ -25,9 +27,9 @@ python ../models/nmt.py \
     --dev-tgt ${dev_tgt} \
     --save-to ${work_dir}/model.bin \
     --valid-niter 200 \
-    --batch-size 16 \
-    --hidden-size 128 \
-    --embed-size 128 \
+    --batch-size 32 \
+    --hidden-size 512 \
+    --embed-size 256 \
     --uniform-init 0.1 \
     --dropout 0.25 \
     --clip-grad 5.0 \
