@@ -2,13 +2,9 @@
 
 * Pre-Run
 
-cd models
-
 pip install -r requirements.txt
 
-pip install docopt
-
-* Commands:
+* Commands to Train + Evaluate:
 
 cd scripts
 
@@ -18,7 +14,7 @@ bash train.sh en-az
 
 bash decode.sh en-az
 
-* To beat (BLEU Scores):
+* Reference BLEU Scores:
 
 az-en: 3.0
 
