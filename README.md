@@ -1,5 +1,11 @@
 # assignment_2
 
+* Pre-Run
+
+cd models
+pip install -r requirements.txt
+pip install docopt
+
 * Commands:
 
 cd scripts
