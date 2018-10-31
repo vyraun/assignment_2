@@ -25,7 +25,7 @@ python ../models/nmt.py \
     --dev-tgt ${dev_tgt} \
     --save-to ${work_dir}/model.bin \
     --valid-niter 200 \
-    --batch-size 32 \
+    --batch-size 16 \
     --hidden-size 128 \
     --embed-size 128 \
     --uniform-init 0.1 \
