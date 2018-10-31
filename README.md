@@ -1,6 +1,6 @@
 # assignment_2
 
-Commands:
+* Commands:
 
 cd scripts
 
@@ -10,7 +10,7 @@ bash train.sh en-az
 
 bash decode.sh en-az
 
-To beat:
+* To beat (BLEU Scores):
 
 az-en: 3.0
 
