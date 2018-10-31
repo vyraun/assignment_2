@@ -1,16 +1,17 @@
 #!/bin/sh
 
 lang_pair=${@:1}
+source=${lang_pair##*-}
 
 vocab="../data/vocab_$lang_pair.bin"
-train_src="../data/train.$lang_pair.az.txt"
+train_src="../data/train.$lang_pair.$source.txt"
 train_tgt="../data/train.$lang_pair.en.txt"
-dev_src="../data/dev.$lang_pair.az.txt"
+dev_src="../data/dev.$lang_pair.$source.txt"
 dev_tgt="../data/dev.$lang_pair.en.txt"
-test_src="../data/test.$lang_pair.az.txt"
+test_src="../data/test.$lang_pair.$source.txt"
 test_tgt="../data/test.$lang_pair.en.txt"
 
-work_dir="../results/$lang_pair"
+work_dir="results/$lang_pair"
 
 mkdir -p ${work_dir}
 echo save re
