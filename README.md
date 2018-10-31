@@ -1,5 +1,12 @@
 # assignment_2
 
+Commands:
+
+cd scripts
+bash build_vocab.sh en-az
+bash train.sh en-az
+bash decode.sh en-az
+
 To beat:
 
 az-en: 3.0
