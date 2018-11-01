@@ -4,7 +4,7 @@
 
 pip install -r requirements.txt
 
-* Commands to Train + Evaluate:
+* Commands to Train + Evaluate (e.g. a language pair might be: en-aztr):
 
 cd scripts
 
@@ -27,3 +27,4 @@ beru-en (be with ru): 11.6
 gl-en: 16.5
 
 glpt-en (gl with pt): 22.0
+
