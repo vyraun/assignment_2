@@ -109,13 +109,14 @@ class NMT(object):
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
         self.vocab = vocab
+        self.bidirectional = bidirectional
 
         src_vocab_size = len(self.vocab.src.word2id)
         tgt_vocab_size = len(self.vocab.tgt.word2id)
 
         self.encoder = model.EncoderRNN(vocab_size=src_vocab_size,
                                         embed_size=self.embed_size,
-                                        hidden_size=hidden_size//2 if bidirectional else hidden_size,
+                                        hidden_size=hidden_size,
                                         dropout_rate=dropout_rate,
                                         num_layers=num_layers,
                                         bidirectional=bidirectional)
@@ -125,10 +126,11 @@ class NMT(object):
                                         dropout_rate=dropout_rate,
                                         num_layers=num_layers,
                                         attention_type=attention_type,
-                                        self_attention=self_attention)
+                                        self_attention=self_attention,
+                                        bidirectional=bidirectional)
         self.encoder = self.encoder.cuda()
         self.decoder = self.decoder.cuda() 
-
+       
         # Initialize all parameter weights uniformly
         for param in list(self.encoder.parameters()) + list(self.decoder.parameters()):
           torch.nn.init.uniform(param, a=-uniform_init, b=uniform_init)
@@ -191,7 +193,6 @@ class NMT(object):
         unsorted_indices = sorted(range(len(sorted_indices)), key=lambda i: sorted_indices[i])
         src_encodings = src_encodings[:,unsorted_indices]
         decoder_init_state = [e[:,unsorted_indices] for e in decoder_init_state]
-
         return src_encodings, decoder_init_state
 
     def decode(self, src_encodings: torch.Tensor, decoder_init_state: Any, tgt_sents: List[List[str]]) -> torch.Tensor:
@@ -225,13 +226,16 @@ class NMT(object):
         input_tensor = Variable(torch.cuda.LongTensor(padded_tgt_sent).t())
         scores = torch.zeros(input_tensor[0].size()).cuda()
         last_hidden = decoder_init_state
-
         #outputs, _ = self.decoder(last_hidden, input_tensor, 1, [len(sent) for sent in numb_tgt_sents])
 
+        if self.bidirectional == True:
+            context = torch.zeros(1, len(tgt_sents), self.hidden_size * 2).cuda()
+        else:
+            context = torch.zeros(1, len(tgt_sents), self.hidden_size).cuda()
         #return self.criterion(outputs[:-1].view(-1, outputs.size(2)), input_tensor[1:].contiguous().view(-1))
         for t in range(1,max_len):
           # Get output from the decoder
-          output, last_hidden = self.decoder(src_encodings, last_hidden, input_tensor[t-1].unsqueeze(0))
+          output, last_hidden, context = self.decoder(src_encodings, last_hidden, input_tensor[t-1].unsqueeze(0), context)
           # Compute scores and add them
           #scores += self.criterion(output.squeeze(0), input_tensor[t]) * (input_lengths > t).float()
           scores += self.criterion(output.squeeze(0), input_tensor[t]) * (input_lengths > t).float()
@@ -255,7 +259,10 @@ class NMT(object):
                 score: float: the log-likelihood of the target sentence
         """
         src, dec_init_state = self.encode([src_sent])
-        
+        if self.bidirectional == True:
+            context = torch.zeros(1, 1, self.hidden_size * 2).cuda()
+        else:
+            context = torch.zeros(1 , 1, self.hidden_size).cuda()
         # Greedy Decoding for testing
         
         # previous_word = '<sos>'
@@ -290,22 +297,23 @@ class NMT(object):
           return [e.cuda().detach() for e in h]
 
         # Beam search decoding
-        hypotheses = {str(self.vocab.tgt.word2id['<s>']): (0, to_cpu(dec_init_state))}  # string vs the log likelihood
+        hypotheses = {str(self.vocab.tgt.word2id['<s>']): (0, to_cpu(dec_init_state), context.cpu().detach())}
         start_time = time.time() 
         for t in range(max_decoding_time_step):
             new_hypotheses = {}
-            for hyp,(score,hidden) in hypotheses.items():
+            for hyp,(score,hidden,context) in hypotheses.items():
                 previous_word = int(hyp.split()[-1])
                 if previous_word == self.vocab.tgt.word2id['</s>']:
-                    new_hypotheses[hyp] = (score,None)
+                    new_hypotheses[hyp] = (score,None,None)
                     continue
 
                 # Create a tensor for the last word
                 last_word = torch.cuda.LongTensor([[previous_word]])
 
                 # Pass through the decoder
-                scores, new_hidden = self.decoder(src, to_cuda(hidden), last_word)
+                scores, new_hidden, new_context= self.decoder(src, to_cuda(hidden), last_word, context.cuda().detach())
                 new_hidden = to_cpu(new_hidden)
+                new_context = new_context.cpu().detach()
                 scores = F.log_softmax(scores, dim=2)
                 top_scores, score_indices = torch.topk(scores, k=beam_size+1, dim=2)
 
@@ -322,7 +330,7 @@ class NMT(object):
 
                   word = str(word_index)
                   new_score = score + top_scores[0,0,i].item()
-                  new_hypotheses[hyp + " " + word] = (new_score, new_hidden)
+                  new_hypotheses[hyp + " " + word] = (new_score, new_hidden, new_context)
 
        	    # Prune the hypotheses for the next step
             hypotheses = dict(sorted(new_hypotheses.items(), key=lambda t: t[1][0]/len(t[0].split()), reverse=True)[:beam_size])
@@ -330,7 +338,6 @@ class NMT(object):
         def _denumberize(s):
           nums = [int(e) for e in s.split()]
           return self.vocab.tgt.denumberize(nums)
-
         return [Hypothesis(_denumberize(x), hypotheses[x][0]) for x in hypotheses] # namedtuple('Hypothesis', hypotheses.keys())(**hypotheses) 
         
 
@@ -584,7 +591,6 @@ def beam_search(model: NMT, test_data_src: List[List[str]], beam_size: int, max_
     hypotheses = []
     for src_sent in tqdm(test_data_src, desc='Decoding', file=sys.stdout):
         example_hyps = model.beam_search(src_sent, beam_size=beam_size, max_decoding_time_step=max_decoding_time_step)
-
         hypotheses.append(example_hyps)
 
     return hypotheses
