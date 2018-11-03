@@ -324,9 +324,9 @@ class NMT(object):
                     continue
 
                   word_index = score_indices[0,0,i].item()
-                  if word_index == self.vocab.tgt.unk_id:
-                    seen_unk = True
-                    continue
+                  #if word_index == self.vocab.tgt.unk_id:
+                  #  seen_unk = True
+                  #  continue
 
                   word = str(word_index)
                   new_score = score + top_scores[0,0,i].item()
