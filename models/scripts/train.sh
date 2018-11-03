@@ -24,15 +24,15 @@ python nmt.py \
     --dev-src ${dev_src} \
     --dev-tgt ${dev_tgt} \
     --save-to ${work_dir}/model.bin \
-    --valid-niter 2400 \
-    --batch-size 64 \
-    --hidden-size 512 \
+    --valid-niter 800 \
+    --batch-size 16 \
+    --hidden-size 256 \
     --embed-size 256 \
     --uniform-init 0.1 \
-    --dropout 0.5 \
+    --dropout 0.2 \
     --clip-grad 5.0 \
     --lr-decay 0.5 \
-    --num-layers 3 \
+    --num-layers 2 \
     --attention-type 'general' \
     --bidirectional
 

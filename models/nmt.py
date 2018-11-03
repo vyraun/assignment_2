@@ -229,9 +229,9 @@ class NMT(object):
         #outputs, _ = self.decoder(last_hidden, input_tensor, 1, [len(sent) for sent in numb_tgt_sents])
 
         if self.bidirectional == True:
-            context = torch.zeros(1, len(tgt_sents), self.hidden_size * 2).cuda()
+            context = torch.ones(1, len(tgt_sents), self.hidden_size * 2).cuda()
         else:
-            context = torch.zeros(1, len(tgt_sents), self.hidden_size).cuda()
+            context = torch.ones(1, len(tgt_sents), self.hidden_size).cuda()
         #return self.criterion(outputs[:-1].view(-1, outputs.size(2)), input_tensor[1:].contiguous().view(-1))
         for t in range(1,max_len):
           # Get output from the decoder
@@ -260,9 +260,9 @@ class NMT(object):
         """
         src, dec_init_state = self.encode([src_sent])
         if self.bidirectional == True:
-            context = torch.zeros(1, 1, self.hidden_size * 2).cuda()
+            context = torch.ones(1, 1, self.hidden_size * 2).cuda()
         else:
-            context = torch.zeros(1 , 1, self.hidden_size).cuda()
+            context = torch.ones(1 , 1, self.hidden_size).cuda()
         # Greedy Decoding for testing
         
         # previous_word = '<sos>'
