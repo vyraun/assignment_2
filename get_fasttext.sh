@@ -4,3 +4,4 @@ cd fastText-master/
 make
 cd ..
 mv train_fasttext.sh fastText-master/
+cd fastText-master/
