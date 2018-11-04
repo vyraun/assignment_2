@@ -1,4 +1,4 @@
-f = open("../az.wiki.txt")
+f = open("wikis/az.wiki.txt")
 documents = []
 
 for line in f:
