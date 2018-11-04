@@ -10,6 +10,8 @@ bash get_wikis.sh
 
 bash get_fasttext.sh
 
+bash train_fasttext.sh
+
 * Commands to Train + Evaluate (e.g. a language pair might be: en-aztr):
 
 cd scripts
