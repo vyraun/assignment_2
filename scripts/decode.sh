@@ -21,7 +21,7 @@ python ../models/nmt.py \
     --beam-size 5 \
     --max-decoding-time-step 100 \
     ${work_dir}/model.bin \
-    "../data/lm_wiki.txt" \
+    ${test_src} \
     ${work_dir}/decode.txt
 
 perl multi-bleu.perl ${test_tgt} < ${work_dir}/decode.txt

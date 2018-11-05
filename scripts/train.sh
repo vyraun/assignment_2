@@ -33,15 +33,15 @@ python ../models/nmt.py \
     --dev-src ${dev_src} \
     --dev-tgt ${dev_tgt} \
     --save-to ${work_dir}/model.bin \
-    --valid-niter 800 \
+    --valid-niter 160 \
     --batch-size 16 \
-    --hidden-size 256 \
-    --embed-size 256 \
+    --hidden-size 512 \
+    --embed-size 300 \
     --uniform-init 0.1 \
-    --dropout 0.2 \
+    --dropout 0.3 \
     --clip-grad 5.0 \
     --lr-decay 0.5 \
-    --num-layers 1 \
+    --num-layers 2 \
     --attention-type 'general' \
     --bidirectional \
     --embedding_file ${embed_file}

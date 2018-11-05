@@ -121,21 +121,20 @@ class NMT(object):
              f = open(embedding_file)
              print("Loading the vectors.")
 
+             i = 0
              for line in f:
-                  values = line.split()
-                  word = values[0]
-                  coefs = np.asarray(values[1:], dtype='float32')
-                  Glove[word] = coefs
+                  if i != 0:
+                      word, vec = line.split(' ', 1)
+                      Glove[word] = np.fromstring(vec, sep=' ')
+                  i += 1
              f.close()
 
              print("Done.")
-             X_train = []
+             X_train = np.zeros((len(self.vocab.src.id2word), 300))
 
              for i in range(len(self.vocab.src.id2word)):
                   if self.vocab.src.id2word[i] in Glove:
-                      X_train.append(Glove[self.vocab.src.id2word[i]])
-                  else:
-                      X_train.append(np.zeros(embed_size))
+                      X_train[i] = Glove[self.vocab.src.id2word[i]]
 
              embeddings = np.asarray(X_train)
         else:
