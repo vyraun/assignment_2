@@ -14,6 +14,8 @@ dev_src="../data/dev.$lang_pair.$source.txt"
 dev_tgt="../data/dev.$lang_pair.$target.txt"
 test_src="../data/test.$lang_pair.$source.txt"
 test_tgt="../data/test.$lang_pair.$target.txt"
+test_tgt="../data/test.$lang_pair.en.txt"
+embed_file="../fastText-master/$source.fasttext_vectors.vec"
 
 work_dir="results/$lang_pair"
 
@@ -41,7 +43,8 @@ python ../models/nmt.py \
     --lr-decay 0.5 \
     --num-layers 1 \
     --attention-type 'general' \
-    --bidirectional
+    --bidirectional \
+    --embedding_file ${embed_file}
 
 # FOR BIDIRECTIONAL add the flag --bidirectional
 
