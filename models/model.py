@@ -10,7 +10,7 @@ class EncoderRNN(nn.Module):
                  hidden_size,
                  dropout_rate,
                  num_layers,
-                 bidirectional):
+                 bidirectional, embeddings=None):
         super(EncoderRNN, self).__init__()
 
         self.hidden_size = hidden_size 
@@ -20,6 +20,8 @@ class EncoderRNN(nn.Module):
         self.num_layers = num_layers
         self.bidirectional = bidirectional
         self.embedding = nn.Embedding(self.input_size, self.embed_size)
+        if embeddings is not None:
+            self.embedding.weight.data.copy_(torch.from_numpy(embeddings))
         self.dropout = nn.Dropout(self.dropout_rate)
         self.LSTM = nn.LSTM(self.embed_size, self.hidden_size, num_layers=self.num_layers, dropout=self.dropout_rate, bidirectional=self.bidirectional)
         #for layer

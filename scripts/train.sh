@@ -37,7 +37,8 @@ python ../models/nmt.py \
     --lr-decay 0.5 \
     --num-layers 1 \
     --attention-type 'general' \
-    --bidirectional
+    --bidirectional \
+    --embedding_file ../fastText-master/az_fasttext_vectors.vec
 
 # FOR BIDIRECTIONAL add the flag --bidirectional
 

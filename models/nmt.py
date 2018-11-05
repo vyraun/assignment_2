@@ -37,6 +37,7 @@ Options:
     --dropout=<float>                       dropout [default: 0.2]
     --max-decoding-time-step=<int>          maximum number of decoding time steps [default: 70]
     --self-attention                        use self attention for the decoder
+    --embedding_file=<file>                 location of pre-trained file
 """
 import math
 import model
@@ -102,7 +103,7 @@ class NMT(object):
                  bidirectional,
                  attention_type,
                  self_attention,
-                 uniform_init):
+                 uniform_init, embedding_file=None):
         super(NMT, self).__init__()
 
         self.embed_size = embed_size
@@ -114,12 +115,38 @@ class NMT(object):
         src_vocab_size = len(self.vocab.src.word2id)
         tgt_vocab_size = len(self.vocab.tgt.word2id)
 
+        if embedding_file is not None:
+
+             Glove = {}
+             f = open(embedding_file)
+             print("Loading the vectors.")
+
+             for line in f:
+                  values = line.split()
+                  word = values[0]
+                  coefs = np.asarray(values[1:], dtype='float32')
+                  Glove[word] = coefs
+             f.close()
+
+             print("Done.")
+             X_train = []
+
+             for i in range(len(self.vocab.src.id2word)):
+                  if self.vocab.src.id2word[i] in Glove:
+                      X_train.append(Glove[self.vocab.src.id2word[i]])
+                  else:
+                      X_train.append(np.zeros(embed_size))
+
+             embeddings = np.asarray(X_train)
+        else:
+             embeddings = None
+
         self.encoder = model.EncoderRNN(vocab_size=src_vocab_size,
                                         embed_size=self.embed_size,
                                         hidden_size=hidden_size,
                                         dropout_rate=dropout_rate,
                                         num_layers=num_layers,
-                                        bidirectional=bidirectional)
+                                        bidirectional=bidirectional, embeddings=embeddings)
         self.decoder = model.DecoderRNN(embed_size=self.embed_size,
                                         hidden_size=self.hidden_size,
                                         output_size=tgt_vocab_size,
@@ -447,7 +474,9 @@ def train(args: Dict[str, str]):
                 bidirectional=args['--bidirectional'],
                 attention_type=args['--attention-type'],
                 self_attention=args['--self-attention'],
-                uniform_init=float(args['--uniform-init']))
+                uniform_init=float(args['--uniform-init']),
+                embedding_file=args['--embedding_file'])
+                
 
     # Set training to true
     model.encoder.train()
