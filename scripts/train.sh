@@ -10,6 +10,7 @@ dev_src="../data/dev.$lang_pair.$source.txt"
 dev_tgt="../data/dev.$lang_pair.en.txt"
 test_src="../data/test.$lang_pair.$source.txt"
 test_tgt="../data/test.$lang_pair.en.txt"
+embed_file="../fastText-master/$source.fasttext_vectors.vec"
 
 work_dir="results/$lang_pair"
 
@@ -38,7 +39,7 @@ python ../models/nmt.py \
     --num-layers 1 \
     --attention-type 'general' \
     --bidirectional \
-    --embedding_file ../fastText-master/az_fasttext_vectors.vec
+    --embedding_file ${embed_file}
 
 # FOR BIDIRECTIONAL add the flag --bidirectional
 
