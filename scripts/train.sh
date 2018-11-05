@@ -15,7 +15,7 @@ dev_tgt="../data/dev.$lang_pair.$target.txt"
 test_src="../data/test.$lang_pair.$source.txt"
 test_tgt="../data/test.$lang_pair.$target.txt"
 test_tgt="../data/test.$lang_pair.en.txt"
-embed_file="../fastText-master/$source.fasttext_vectors.vec"
+embed_file="../wiki.$source.vec"
 
 work_dir="results/$lang_pair"
 
