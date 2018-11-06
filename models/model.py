@@ -10,6 +10,7 @@ class EncoderRNN(nn.Module):
                  hidden_size,
                  dropout_rate,
                  num_layers,
+                 inp_vocab_size,
                  bidirectional, embeddings=None):
         super(EncoderRNN, self).__init__()
 
@@ -28,6 +29,10 @@ class EncoderRNN(nn.Module):
         self.embedding_layerNorm = nn.LayerNorm(self.embed_size)
         self.hidden_layerNorm = nn.LayerNorm(self.hidden_size)
         self.transform_hidden = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        if self.bidirectional:
+            self.bag_out = nn.Linear(self.hidden_size * 2, self.input_size)
+        else:
+            self.bag_out = nn.Linear(self.hidden_size, self.input_size)
 
     def forward(self, input, input_lengths):
         embedded = self.embedding(input)
@@ -43,17 +48,18 @@ class EncoderRNN(nn.Module):
         output, _ = torch.nn.utils.rnn.pad_packed_sequence(output)
         if self.bidirectional != True:
             #hidden = self.transform(hidden)
-            return output, hidden
+            return output, hidden, self.bag_out(hidden)
         else:
             hidden_final = torch.cat((hidden[0][0], hidden[0][1]), dim=1).unsqueeze(0)
             cell_final = torch.cat((hidden[1][0], hidden[1][1]), dim=1).unsqueeze(0)
+            bag_out = self.bag_out(hidden_final)
             for i in range(1, self.num_layers):
                 hidden_final = torch.cat((hidden_final, torch.cat((hidden[0][2*i], hidden[0][2*i + 1]), dim=1).unsqueeze(0)), dim=0)
                 cell_final = torch.cat((cell_final, torch.cat((hidden[1][2*i], hidden[1][2*i + 1]), dim=1).unsqueeze(0)), dim=0)
         # Changes for Bidi to work
             cell_final = self.transform_hidden(cell_final)
             hidden_final = F.tanh(cell_final)
-            return output, (hidden_final, cell_final)
+            return output, (hidden_final, cell_final), bag_out
 
 class DecoderRNN(nn.Module):
     def __init__(self, 

@@ -111,10 +111,11 @@ class NMT(object):
         self.dropout_rate = dropout_rate
         self.vocab = vocab
         self.bidirectional = bidirectional
-
         src_vocab_size = len(self.vocab.src.word2id)
         tgt_vocab_size = len(self.vocab.tgt.word2id)
 
+        self.src_vocab_size = len(self.vocab.src.word2id)
+        self.tgt_vocab_size = len(self.vocab.tgt.word2id)
         if embedding_file is not None:
 
              Glove = {}
@@ -140,17 +141,20 @@ class NMT(object):
         else:
              embeddings = None
 
+        if num_layers >= 2:
+            dec_layer = num_layers - 1
         self.encoder = model.EncoderRNN(vocab_size=src_vocab_size,
                                         embed_size=self.embed_size,
                                         hidden_size=hidden_size,
                                         dropout_rate=dropout_rate,
                                         num_layers=num_layers,
+                                        inp_vocab_size=self.src_vocab_size,
                                         bidirectional=bidirectional, embeddings=embeddings)
         self.decoder = model.DecoderRNN(embed_size=self.embed_size,
                                         hidden_size=self.hidden_size,
                                         output_size=tgt_vocab_size,
                                         dropout_rate=dropout_rate,
-                                        num_layers=num_layers,
+                                        num_layers=dec_layer,
                                         attention_type=attention_type,
                                         self_attention=self_attention,
                                         bidirectional=bidirectional)
@@ -177,10 +181,10 @@ class NMT(object):
                 log-likelihood of generating the gold-standard target sentence for 
                 each example in the input batch
         """
-        src_encodings, decoder_init_state = self.encode(src_sents)
+        src_encodings, decoder_init_state, bag_loss = self.encode(src_sents)
         scores = self.decode(src_encodings, decoder_init_state, tgt_sents)
 
-        return scores
+        return scores, bag_loss
 
     def encode(self, src_sents: List[List[str]]) -> Tuple[torch.Tensor, Any]:
         """
@@ -196,13 +200,20 @@ class NMT(object):
         """
         # Numberize the source sentences
         numb_src_sents = self.vocab.src.numberize(src_sents)
+        bag_input = []
+        for numb_sents in numb_src_sents:
+            arr = [0 for i in range(self.src_vocab_size)]
+            for points in numb_sents:
+                arr[points] = 1
+            bag_input.append(arr)
 
         # Sort from longest to smallest
         sorted_indices = sorted(range(len(src_sents)), key=lambda i: len(numb_src_sents[i]), reverse=True)
 
         # Sort numberized sentences
         numb_src_sents = [numb_src_sents[i] for i in sorted_indices]
-
+        bag_input = [bag_input[i] for i in sorted_indices]
+        bag_input = torch.FloatTensor(bag_input).cuda()
         # Pad each sentence to the maximum length
         max_len = len(numb_src_sents[0])
         padded_src_sent = [sent + [0]*(max_len - len(sent)) for sent in numb_src_sents]
@@ -213,13 +224,15 @@ class NMT(object):
         # Construct a long tensor (seq_len * batch_size)
         input_tensor = Variable(torch.LongTensor(padded_src_sent).t()).cuda()
         # Call encoder
-        src_encodings, decoder_init_state = self.encoder(input_tensor, input_lengths)
+        src_encodings, decoder_init_state, bag_out = self.encoder(input_tensor, input_lengths)
 
         # Unsort
         unsorted_indices = sorted(range(len(sorted_indices)), key=lambda i: sorted_indices[i])
         src_encodings = src_encodings[:,unsorted_indices]
         decoder_init_state = [e[:,unsorted_indices] for e in decoder_init_state]
-        return src_encodings, decoder_init_state
+        bag_loss = -F.log_softmax(bag_out.squeeze(0), dim=-1) * bag_input
+        bag_loss = bag_loss.sum(dim=-1).sum()
+        return src_encodings, decoder_init_state, bag_loss
 
     def decode(self, src_encodings: torch.Tensor, decoder_init_state: Any, tgt_sents: List[List[str]]) -> torch.Tensor:
         """
@@ -284,7 +297,7 @@ class NMT(object):
                 value: List[str]: the decoded target sentence, represented as a list of words
                 score: float: the log-likelihood of the target sentence
         """
-        src, dec_init_state = self.encode([src_sent])
+        src, dec_init_state, _ = self.encode([src_sent])
         if self.bidirectional == True:
             context = torch.ones(1, 1, self.hidden_size * 2).cuda()
         else:
@@ -391,7 +404,7 @@ class NMT(object):
 
         for src_sents, tgt_sents in batch_iter(dev_data, batch_size):
             #loss = -self.model(src_sents, tgt_sents).sum()
-            src_encodings, decoder_init_state = self.encode(src_sents)
+            src_encodings, decoder_init_state, _ = self.encode(src_sents)
             loss = self.decode(src_encodings, decoder_init_state, tgt_sents)[1]
 
             cum_loss += loss.item()
@@ -485,6 +498,7 @@ def train(args: Dict[str, str]):
 
     num_trial = 0
     train_iter = patience = cum_loss = report_loss = cumulative_tgt_words = report_tgt_words = 0
+    bg_loss = 0
     cumulative_examples = report_examples = epoch = valid_num = 0
     hist_valid_scores = []
     train_time = begin_time = time.time()
@@ -506,15 +520,16 @@ def train(args: Dict[str, str]):
 
             # (batch_size)
             start_time = time.time()
-            loss, sum_loss = model(src_sents, tgt_sents)
+            (loss, sum_loss), bag_loss = model(src_sents, tgt_sents)
             #print("forward", time.time() - start_time)
             #report_loss += loss.item()
             #for now using the sum_loss to calculate report_loss
             report_loss += sum_loss.item()
+            bg_loss += bag_loss.item()
             cum_loss += sum_loss.item()
-
             # TODO: ensure that this can actually be called
-            loss.backward()
+            total_loss = loss + bag_loss
+            total_loss.backward()
             #print("backwards", time.time() - start_time)
 
             # Clip gradient norms
@@ -531,15 +546,17 @@ def train(args: Dict[str, str]):
             cumulative_examples += batch_size
 
             if train_iter % log_every == 0:
-                print('epoch %d, iter %d, avg. loss %.2f, avg. ppl %.2f ' \
+                print('epoch %d, iter %d, avg. loss %.2f, bag loss %.2f, avg. ppl %.2f ' \
                       'cum. examples %d, speed %.2f words/sec, time elapsed %.2f sec' % (epoch, train_iter,
                                                                                          report_loss / report_examples,
+                                                                                         bg_loss / report_examples,
                                                                                          np.exp(report_loss / report_tgt_words),
                                                                                          cumulative_examples,
                                                                                          report_tgt_words / (time.time() - train_time),
                                                                                          time.time() - begin_time), file=sys.stderr)
 
                 train_time = time.time()
+                bg_loss = 0
                 report_loss = report_tgt_words = report_examples = 0.
 
             # the following code performs validation on dev set, and controls the learning schedule
