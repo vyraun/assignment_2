@@ -232,6 +232,7 @@ class NMT(object):
         decoder_init_state = [e[:,unsorted_indices] for e in decoder_init_state]
         bag_loss = -F.log_softmax(bag_out.squeeze(0), dim=-1) * bag_input
         bag_loss = bag_loss.sum(dim=-1).sum()
+        decoder_init_state = (decoder_init_state[0][-1:], decoder_init_state[1][-1:])
         return src_encodings, decoder_init_state, bag_loss
 
     def decode(self, src_encodings: torch.Tensor, decoder_init_state: Any, tgt_sents: List[List[str]]) -> torch.Tensor:

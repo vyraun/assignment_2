@@ -38,7 +38,7 @@ python ../models/nmt.py \
     --hidden-size 256 \
     --embed-size 256 \
     --uniform-init 0.1 \
-    --dropout 0.3 \
+    --dropout 0.2 \
     --clip-grad 5.0 \
     --lr-decay 0.5 \
     --num-layers 2 \
