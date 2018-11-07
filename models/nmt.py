@@ -496,7 +496,7 @@ def train(args: Dict[str, str]):
     model.decoder.train()
 
     # model.cuda() or model = model.cuda() or model = NMT().cuda() # error: model has no attribute cuda
-
+    interpolator = 0.5
     num_trial = 0
     train_iter = patience = cum_loss = report_loss = cumulative_tgt_words = report_tgt_words = 0
     bg_loss = 0
@@ -529,7 +529,7 @@ def train(args: Dict[str, str]):
             bg_loss += bag_loss.item()
             cum_loss += sum_loss.item()
             # TODO: ensure that this can actually be called
-            total_loss = loss + bag_loss
+            total_loss = (interpolator * loss) + (1 - interpolator) * bag_loss
             total_loss.backward()
             #print("backwards", time.time() - start_time)
 
