@@ -143,6 +143,9 @@ class NMT(object):
 
         if num_layers >= 2:
             dec_layer = num_layers - 1
+        else:
+            dec_layer = num_layers
+
         self.encoder = model.EncoderRNN(vocab_size=src_vocab_size,
                                         embed_size=self.embed_size,
                                         hidden_size=hidden_size,
@@ -373,7 +376,7 @@ class NMT(object):
                   new_hypotheses[hyp + " " + word] = (new_score, new_hidden, new_context)
 
        	    # Prune the hypotheses for the next step
-            hypotheses = dict(sorted(new_hypotheses.items(), key=lambda t: t[1][0]/len(t[0].split()), reverse=True)[:beam_size])
+            hypotheses = dict(sorted(new_hypotheses.items(), key=lambda t: t[1][0], reverse=True)[:beam_size])
         #print(" %s --- beam" %(time.time() - start_time))
         def _denumberize(s):
           nums = [int(e) for e in s.split()]
