@@ -35,8 +35,8 @@ python ../models/nmt.py \
     --save-to ${work_dir}/model.bin \
     --valid-niter 800 \
     --batch-size 16 \
-    --hidden-size 300 \
-    --embed-size 512 \
+    --hidden-size 512 \
+    --embed-size 300 \
     --uniform-init 0.1 \
     --dropout 0.2 \
     --clip-grad 5.0 \
