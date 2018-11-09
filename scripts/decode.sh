@@ -5,7 +5,7 @@ target=${lang_pair%-*}
 echo source $source
 echo target $target
 
-vocab="../data/vocab_$lang_pair.bin"
+vocab="../data/lm_vocab_$lang_pair.bin"
 train_src="../data/train.$lang_pair.$source.txt"
 train_tgt="../data/train.$lang_pair.$target.txt"
 dev_src="../data/dev.$lang_pair.$source.txt"

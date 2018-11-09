@@ -115,6 +115,10 @@ class DecoderRNN(nn.Module):
 
         self.self_attention = self_attention
 
+    def set_weights(self, lang_model):
+        self.embedding.weight.data.copy_(lang_model.decoder.embedding.weight.data)
+        self.LSTM.load_state_dict(lang_model.decoder.LSTM.state_dict())
+        
     def forward(self, encoder_outputs, hidden, output, prev_context, flag=0, output_lengths=None):
         embedded = self.embedding(output)
         #embedded = self.embedding_layerNorm(embedded)
@@ -123,8 +127,6 @@ class DecoderRNN(nn.Module):
         rnn_input = embedded
         new_input = torch.cat((rnn_input, prev_context), dim=2)
         output, hidden = self.LSTM(new_input, hidden)
-        output = self.out(output)
-        return output, hidden, prev_context
 
         if self.num_layers > 1:
             cur_hidden = hidden[0][-1:]

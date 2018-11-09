@@ -43,7 +43,8 @@ python ../models/nmt.py \
     --lr-decay 0.5 \
     --num-layers 1 \
     --attention-type 'general' \
-    --bidirectional
+    --bidirectional \
+    --lang-model results/lm_en-aztr/model.bin
 
 # FOR BIDIRECTIONAL add the flag --bidirectional
 

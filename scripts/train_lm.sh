@@ -7,13 +7,13 @@ target=${lang_pair%-*}
 echo source $source
 echo target $target
 
-vocab="../data/vocab_lm.bin"
+vocab="../data/lm_vocab_$lang_pair.bin"
 train_src="../data/lm_wiki_train.txt"
 train_tgt="../data/lm_wiki_train.txt"
 dev_src="../data/lm_wiki_dev.txt"
 dev_tgt="../data/lm_wiki_dev.txt"
 
-work_dir="results/$lang_pair"
+work_dir="results/lm_$lang_pair"
 
 mkdir -p ${work_dir}
 echo save re
@@ -30,7 +30,7 @@ python ../models/nmt.py \
     --dev-tgt ${dev_tgt} \
     --save-to ${work_dir}/model.bin \
     --valid-niter 800 \
-    --batch-size 32 \
+    --batch-size 64 \
     --hidden-size 256 \
     --embed-size 256 \
     --uniform-init 0.1 \
