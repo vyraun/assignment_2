@@ -7,6 +7,7 @@ Usage:
     nmt.py train --train-src=<file> --train-tgt=<file> --dev-src=<file> --dev-tgt=<file> --vocab=<file> [options]
     nmt.py decode [options] MODEL_PATH TEST_SOURCE_FILE OUTPUT_FILE
     nmt.py decode [options] MODEL_PATH TEST_SOURCE_FILE TEST_TARGET_FILE OUTPUT_FILE
+    nmt.py analysis [options]
 
 Options:
     -h --help                               show this screen.
@@ -38,6 +39,8 @@ Options:
     --max-decoding-time-step=<int>          maximum number of decoding time steps [default: 70]
     --self-attention                        use self attention for the decoder
     --embedding_file=<file>                 location of pre-trained file
+    --omodel=<file>                         location of original model
+    --pmodel=<file>                         location of some other model
 """
 import math
 import model
@@ -664,6 +667,21 @@ def decode(args: Dict[str, str]):
     model.decoder.train()
 
 
+def analyse(args: Dict[str, str]):
+    """
+    Creates files for the purpose of analysis
+    """
+
+    omodel = NMT.load(args['--omodel'])
+    pmodel = NMT.load(args['--pmodel'])
+    hehe = dict()
+
+    hehe['o_embedding'] = omodel.encoder.embedding.weight.data.cpu().numpy()
+    hehe['p_embedding'] = pmodel.encoder.embedding.weight.data.cpu().numpy()
+    hehe['vocab'] = omodel.vocab.src.word2id
+    dumper = open('results/en-az/dumped.bin', 'wb')
+    pickle.dump(hehe, dumper)
+
 def main():
     args = docopt(__doc__)
 
@@ -676,6 +694,8 @@ def main():
         train(args)
     elif args['decode']:
         decode(args)
+    elif args['analysis']:
+        analyse(args)
     else:
         raise RuntimeError(f'invalid mode')
 
