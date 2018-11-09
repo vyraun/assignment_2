@@ -44,7 +44,7 @@ python ../models/nmt.py \
     --num-layers 1 \
     --attention-type 'general' \
     --bidirectional \
-    --lang-model results/lm_en-aztr/model.bin
+    --lang-model results/lm_$lang_pair/model.bin
 
 # FOR BIDIRECTIONAL add the flag --bidirectional
 
