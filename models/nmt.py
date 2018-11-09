@@ -177,7 +177,9 @@ class NMT(object):
                 log-likelihood of generating the gold-standard target sentence for 
                 each example in the input batch
         """
-        src_encodings, decoder_init_state = self.encode(src_sents)
+        #src_encodings, decoder_init_state = self.encode(src_sents)
+        src_encodings = None
+        decoder_init_state = None
         scores = self.decode(src_encodings, decoder_init_state, tgt_sents)
 
         return scores
@@ -251,13 +253,17 @@ class NMT(object):
         # Construct a long tensor (seq_len * batch_size)
         input_tensor = Variable(torch.cuda.LongTensor(padded_tgt_sent).t())
         scores = torch.zeros(input_tensor[0].size()).cuda()
-        last_hidden = decoder_init_state
+
+        last_hidden1 = torch.ones(1, len(tgt_sents), self.hidden_size).cuda()
+        last_hidden2 = torch.ones(1, len(tgt_sents), self.hidden_size).cuda()
+        last_hidden = (last_hidden1, last_hidden2)
         #outputs, _ = self.decoder(last_hidden, input_tensor, 1, [len(sent) for sent in numb_tgt_sents])
 
         if self.bidirectional == True:
             context = torch.ones(1, len(tgt_sents), self.hidden_size * 2).cuda()
         else:
             context = torch.ones(1, len(tgt_sents), self.hidden_size).cuda()
+
         #return self.criterion(outputs[:-1].view(-1, outputs.size(2)), input_tensor[1:].contiguous().view(-1))
         for t in range(1,max_len):
           # Get output from the decoder
@@ -350,16 +356,16 @@ class NMT(object):
                     continue
 
                   word_index = score_indices[0,0,i].item()
-                  if word_index == self.vocab.tgt.unk_id:
-                    seen_unk = True
-                    continue
+                  #if word_index == self.vocab.tgt.unk_id:
+                  #  seen_unk = True
+                  #  continue
 
                   word = str(word_index)
                   new_score = score + top_scores[0,0,i].item()
                   new_hypotheses[hyp + " " + word] = (new_score, new_hidden, new_context)
 
        	    # Prune the hypotheses for the next step
-            hypotheses = dict(sorted(new_hypotheses.items(), key=lambda t: t[1][0]/len(t[0].split()), reverse=True)[:beam_size])
+            hypotheses = dict(sorted(new_hypotheses.items(), key=lambda t: t[1][0], reverse=True)[:beam_size])
         #print(" %s --- beam" %(time.time() - start_time))
         def _denumberize(s):
           nums = [int(e) for e in s.split()]
@@ -391,7 +397,11 @@ class NMT(object):
 
         for src_sents, tgt_sents in batch_iter(dev_data, batch_size):
             #loss = -self.model(src_sents, tgt_sents).sum()
-            src_encodings, decoder_init_state = self.encode(src_sents)
+            #src_encodings, decoder_init_state = self.encode(src_sents)
+            last_hidden1 = torch.ones(1, len(tgt_sents), self.hidden_size).cuda() 
+            last_hidden2 = torch.ones(1, len(tgt_sents), self.hidden_size).cuda()
+            decoder_init_state = (last_hidden1, last_hidden2)
+            src_encodings = None
             loss = self.decode(src_encodings, decoder_init_state, tgt_sents)[1]
 
             cum_loss += loss.item()
@@ -560,14 +570,14 @@ def train(args: Dict[str, str]):
                 print('begin validation ...', file=sys.stderr)
 
                 # compute dev. ppl and bleu
-                dev_ppl = model.evaluate_ppl(dev_data, batch_size=64)   # dev batch size can be a bit larger
-                valid_metric = -dev_ppl
+                #dev_ppl = model.evaluate_ppl(dev_data, batch_size=8)   # dev batch size can be a bit larger
+                #valid_metric = -dev_ppl
 
-                print('validation: iter %d, dev. ppl %f' % (train_iter, dev_ppl), file=sys.stderr)
+                #print('validation: iter %d, dev. ppl %f' % (train_iter, dev_ppl), file=sys.stderr)
 
-                is_better = len(hist_valid_scores) == 0 or valid_metric > max(hist_valid_scores)
-                hist_valid_scores.append(valid_metric)
-
+                #is_better = len(hist_valid_scores) == 0 or valid_metric > max(hist_valid_scores)
+                #hist_valid_scores.append(valid_metric)
+                is_better = True
                 if is_better:
                     patience = 0
                     print('save currently the best model to [%s]' % model_save_path, file=sys.stderr)

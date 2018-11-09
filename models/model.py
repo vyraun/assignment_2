@@ -123,6 +123,8 @@ class DecoderRNN(nn.Module):
         rnn_input = embedded
         new_input = torch.cat((rnn_input, prev_context), dim=2)
         output, hidden = self.LSTM(new_input, hidden)
+        output = self.out(output)
+        return output, hidden, prev_context
 
         if self.num_layers > 1:
             cur_hidden = hidden[0][-1:]
