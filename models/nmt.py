@@ -133,7 +133,7 @@ class NMT(object):
              f.close()
 
              print("Done.")
-             X_train = np.zeros((len(self.vocab.src.id2word), 300))
+             X_train = np.zeros((len(self.vocab.src.id2word), self.embed_size))
 
              for i in range(len(self.vocab.src.id2word)):
                   if self.vocab.src.id2word[i] in Glove:
