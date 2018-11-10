@@ -118,6 +118,7 @@ class DecoderRNN(nn.Module):
     def set_weights(self, lang_model):
         self.embedding.weight.data.copy_(lang_model.decoder.embedding.weight.data)
         self.LSTM.load_state_dict(lang_model.decoder.LSTM.state_dict())
+        self.out.load_state_dict(lang_model.decoder.out.state_dict())
         
     def forward(self, encoder_outputs, hidden, output, prev_context, flag=0, output_lengths=None):
         embedded = self.embedding(output)
