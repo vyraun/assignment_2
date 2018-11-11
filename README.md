@@ -37,19 +37,3 @@ beru-en (be with ru): 11.6
 gl-en: 16.5
 
 glpt-en (gl with pt): 22.0
-
-| Training Dataset        | Our Score (on target) + Model        | Ref  |
-| ------------- |:-------------:| -----:|
-| en-az         |               |               |
-| en-be         |               |               |
-| en-gl         |               |               |
-| en-aztr         |               |               |
-| en-azen         |               |               |
-| en-aztren         |               |               |
-| en-beru         |               |               |
-| en-been         |               |               |
-| en-beruen         |               |               |
-| en-glpt         |               |               |
-| en-glen         |               |               |
-| en-glpten         |               |               |
-
