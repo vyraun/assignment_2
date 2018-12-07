@@ -35,7 +35,7 @@ z = []
 
 # Removing Projections on Top Components
 for i, x in enumerate(X_train):
-    for u in U1[0:7]:
+    for u in U1[0:4]:  # 4 to be removed as per the gudelines
         x = x - np.dot(u.transpose(),x) * u
         z.append(x)
 
