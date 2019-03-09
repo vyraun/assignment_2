@@ -4,6 +4,18 @@
 
 pip install -r requirements.txt
 
+* Commands to Train + Evaluate (e.g. a language pair might be: en-aztr):
+
+cd scripts
+
+bash build_vocab.sh en-az
+
+bash train.sh en-az
+
+bash decode.sh en-az
+
+* Below commands are optional
+
 * Commands to train embeddings
 
 bash get_wikis.sh
@@ -14,15 +26,6 @@ bash train_fasttext.sh
 
 then, back to scripts => train_all.sh
 
-* Commands to Train + Evaluate (e.g. a language pair might be: en-aztr):
-
-cd scripts
-
-bash build_vocab.sh en-az
-
-bash train.sh en-az
-
-bash decode.sh en-az
 
 * Reference BLEU Scores:
 
